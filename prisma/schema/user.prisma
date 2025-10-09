@@ -52,7 +52,6 @@ model Patient {
   id            String   @id @default(uuid())
   name          String
   email         String   @unique
-  contactNumber String
   profilePhoto  String?
   address       String?
   isDeleted     Boolean  @default(false)
