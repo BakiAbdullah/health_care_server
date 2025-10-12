@@ -2,6 +2,9 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../../shared/prisma";
 import { Request } from "express";
 import { fileUploaderUtils } from "../../helpers/fileUploader";
+import { IOptions, paginationHelper } from "../../helpers/paginationHelper";
+import { Admin, Doctor, Prisma, UserRole } from "@prisma/client";
+import { userSearcheableFields } from "./user.constant";
 
 const createPatient = async (req: Request) => {
   if (req?.file) {
@@ -26,41 +29,127 @@ const createPatient = async (req: Request) => {
   return result;
 };
 
-const getAllUsersFromDB = async (filters: any, options: any) => {
-  
-  
-  // Fallback to prevent server carsh
-  const pageNumber = options.page || 1;
-  const limitNumber = options.limit || 10;
-  const skip = (pageNumber - 1) * limitNumber;
+const createAdmin = async (req: Request): Promise<Admin> => {
+  const file = req.file;
 
-  console.log(status, role)
+  if (file) {
+    const uploadToCloudinary = await fileUploaderUtils.uploadToCloudinary(file);
+    req.body.admin.profilePhoto = uploadToCloudinary?.secure_url;
+  }
+
+  const hashedPassword: string = await bcrypt.hash(req.body.password, 10);
+
+  const userData = {
+    email: req.body.admin.email,
+    password: hashedPassword,
+    role: UserRole.ADMIN,
+  };
+
+  const result = await prisma.$transaction(async (transactionClient) => {
+    await transactionClient.user.create({
+      data: userData,
+    });
+
+    const createdAdminData = await transactionClient.admin.create({
+      data: req.body.admin,
+    });
+
+    return createdAdminData;
+  });
+
+  return result;
+};
+
+const createDoctor = async (req: Request): Promise<Doctor> => {
+  const file = req.file;
+
+  if (file) {
+    const uploadToCloudinary = await fileUploaderUtils.uploadToCloudinary(file);
+    req.body.doctor.profilePhoto = uploadToCloudinary?.secure_url;
+  }
+  const hashedPassword: string = await bcrypt.hash(req.body.password, 10);
+
+  const userData = {
+    email: req.body.doctor.email,
+    password: hashedPassword,
+    role: UserRole.DOCTOR,
+  };
+
+  const result = await prisma.$transaction(async (transactionClient) => {
+    await transactionClient.user.create({
+      data: userData,
+    });
+
+    const createdDoctorData = await transactionClient.doctor.create({
+      data: req.body.doctor,
+    });
+
+    return createdDoctorData;
+  });
+
+  return result;
+};
+
+
+const getAllUsersFromDB = async (filters: any, options: IOptions) => {
+  const { page, limit, skip, sortBy, sortOrder } =
+    paginationHelper.calculatePagination(options);
+
+  const { searchTerm, ...filteredData } = filters;
+
+
+  const andConditions: Prisma.UserWhereInput[] = [];
+
+  if (searchTerm) {
+    andConditions.push({
+      OR: userSearcheableFields.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filteredData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filteredData).map((key) => ({
+        [key]: {
+          equals: (filteredData as any)[key],
+        },
+      })),
+    });
+  }
+
+  const whereConditions: Prisma.UserWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
 
   const result = await prisma.user.findMany({
     skip: skip,
-    take: limitNumber,
-    where: {
-      email: {
-        contains: searchTerm,
-        mode: "insensitive",
-      },
-      role: role,
-      status: status
-    },
+    take: limit,
+    where: whereConditions,
     // orderBy: {
     //   createdAt: 'asc'
     // }
-    orderBy:
-      sortBy && sortOrder
-        ? {
-            [sortBy]: sortOrder,
-          }
-        : { createdAt: "desc" },
+    orderBy: { [sortBy]: sortOrder },
   });
-  return result;
+
+  const total = await prisma.user.count({
+    where: whereConditions,
+  });
+  return {
+    meta: {
+      page,
+      limit,
+      total
+    },
+    data: result
+  };
 };
 
 export const UserServices = {
   createPatient,
   getAllUsersFromDB,
+  createAdmin,
+  createDoctor,
 };
