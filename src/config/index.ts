@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { access } from "fs";
 import path from "path";
 
 dotenv.config({ path: path.join(process.cwd(), ".env") });
@@ -12,5 +13,11 @@ export default {
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
     CLOUD_NAME: process.env.CLOUD_NAME,
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  },
+  jwt_vars: {
+    access_token_secret: process.env.ACCESS_TOKEN_SECRET,
+    refresh_token_secret: process.env.REFRESH_TOKEN_SECRET,
+    access_expires_in: process.env.ACCESS_EXPIRES_IN,
+    refresh_expires_in: process.env.REFRESH_EXPIRES_IN,
   },
 };
