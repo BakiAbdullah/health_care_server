@@ -15,6 +15,7 @@ const createPatient = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 const createAdmin = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.createAdmin(req);
 
@@ -25,6 +26,7 @@ const createAdmin = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 const createDoctor = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.createDoctor(req);
 
@@ -37,7 +39,6 @@ const createDoctor = catchAsync(async (req: Request, res: Response) => {
 });
 
 
-
 const getAllUsersFromDB = catchAsync(async (req: Request, res: Response) => {
   //? page, limit, sortBy, sortOrder - Pagination, sorting
   //? fields, searchTerm - searching, filtering
@@ -48,7 +49,7 @@ const getAllUsersFromDB = catchAsync(async (req: Request, res: Response) => {
     "limit",
     "sortBy",
     "sortOrder",
-  ]);
+  ]); // Pagination and sorting
 
   // const { page, limit, searchTerm, sortBy, sortOrder, role, status } =
   //   req.query;

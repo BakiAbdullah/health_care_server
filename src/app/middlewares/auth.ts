@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { jwtHelper } from "../helpers/jwtHelper";
 import config from "../../config";
-import { User } from "@prisma/client";
+import { jwtHelper } from "../helpers/jwtHelper";
 
 export const auth = (...roles: string[]) => {
   return async (
@@ -27,6 +26,7 @@ export const auth = (...roles: string[]) => {
         throw new Error("You are not authorized!");
       }
 
+      // If all requirments are met, Then we will pass to the next middleware
       next();
     } catch (error) {
       next(error);

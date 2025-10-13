@@ -45,20 +45,21 @@ model Doctor {
   updatedAt           DateTime @default(now())
   user                User     @relation(fields: [email], references: [email])
 
+  doctorSchedules     DoctorSchedules[]
+
   @@map("doctors")
 }
 
 model Patient {
-  id            String   @id @default(uuid())
-  name          String
-  email         String   @unique
-  profilePhoto  String?
-  address       String?
-  isDeleted     Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now())
-  user          User     @relation(fields: [email], references: [email])
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  profilePhoto String?
+  address      String?
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+  user         User     @relation(fields: [email], references: [email])
 
   @@map("patients")
 }
-
