@@ -43,9 +43,9 @@ const getAllUsersFromDB = catchAsync(async (req: Request, res: Response) => {
   //? page, limit, sortBy, sortOrder - Pagination, sorting
   //? fields, searchTerm - searching, filtering
 
-  const filters = pickQuery(req.query, userFilterableFields);
+  const filters = pickQuery(req.query, userFilterableFields); // searching, filtering
   const options = pickQuery(req.query, [
-    "page",
+    "page", 
     "limit",
     "sortBy",
     "sortOrder",
