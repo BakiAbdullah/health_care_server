@@ -2,6 +2,7 @@ import { addHours, addMinutes, format } from "date-fns";
 import { prisma } from "../../shared/prisma";
 import { IOptions, paginationHelper } from "../../helpers/paginationHelper";
 import { Prisma } from "@prisma/client";
+import { IJwtUserPayload } from "../../types/common";
 
 const insertIntoDB = async (payload: any) => {
   const { startTime, endTime, startDate, endDate } = payload;
@@ -70,7 +71,7 @@ const insertIntoDB = async (payload: any) => {
 };
 
 // Get All Doctors schedules
-const getSchedulesForDoctor = async (filters: any, options: IOptions) => {
+const getSchedulesForDoctor = async (user: IJwtUserPayload , filters: any, options: IOptions) => {
   const { page, limit, skip, sortBy, sortOrder } =
     paginationHelper.calculatePagination(options);
 
@@ -98,16 +99,39 @@ const getSchedulesForDoctor = async (filters: any, options: IOptions) => {
 
   const whereConditions: Prisma.ScheduleWhereInput =
     andConditions.length > 0 ? { AND: andConditions } : {};
+  
+  const doctorSchedules = await prisma.doctorSchedules.findMany({
+    where: {
+      doctor: {
+        email: user?.email
+      }
+    },
+    select: {
+      scheduleId: true
+    }
+  })
+
+  const doctorScheduleId = doctorSchedules.map((scheID)=> scheID.scheduleId)
 
   const result = await prisma.schedule.findMany({
-    where: whereConditions,
+    where: {
+      ...whereConditions,
+      id: {
+        notIn: doctorScheduleId,
+      },
+    },
     skip,
     take: limit,
     orderBy: { [sortBy]: sortOrder },
   });
 
   const total = await prisma.schedule.count({
-    where: whereConditions,
+    where: {
+      ...whereConditions,
+      id: {
+        notIn: doctorScheduleId,
+      },
+    },
   });
 
   return {
@@ -120,7 +144,12 @@ const getSchedulesForDoctor = async (filters: any, options: IOptions) => {
   };
 };
 
+const deleteScheduleFromDB = async (id: string) => {
+  return await prisma.schedule.delete({ where: { id : id} });
+};
+
 export const ScheduleServices = {
   insertIntoDB,
   getSchedulesForDoctor,
+  deleteScheduleFromDB,
 };
