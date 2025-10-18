@@ -1,9 +1,10 @@
 import { UserStatus } from "@prisma/client";
-import { prisma } from "../../shared/prisma";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import config from "../../../config";
+import ApiError from "../../errors/ApiError";
 import { jwtHelper } from "../../helpers/jwtHelper";
+import { prisma } from "../../shared/prisma";
+import httpStatus from "http-status";
 
 const login = async (credentials: { email: string; password: string }) => {
   const user = await prisma.user.findUniqueOrThrow({
@@ -17,8 +18,9 @@ const login = async (credentials: { email: string; password: string }) => {
     credentials.password,
     user.password
   );
+  
   if (!isCorrectPassword) {
-    throw new Error("Password is incorrect!!");
+    throw new ApiError(httpStatus.BAD_REQUEST, "Password is incorrect!!");
   }
 
   // Now if all ok => we will generate jwt access & refresh token
@@ -44,7 +46,7 @@ const login = async (credentials: { email: string; password: string }) => {
   return {
     accessToken,
     refreshToken,
-    needPasswordChange: user.needPasswordChange
+    needPasswordChange: user.needPasswordChange,
   };
 };
 

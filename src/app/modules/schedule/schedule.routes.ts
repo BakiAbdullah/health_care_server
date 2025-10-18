@@ -5,8 +5,16 @@ import { UserRole } from "@prisma/client";
 
 const router = express.Router();
 
-router.post("/", auth(UserRole.ADMIN, UserRole.DOCTOR) ,ScheduleController.insertIntoDB);
-router.get("/", ScheduleController.getSchedulesForDoctor);
-router.delete("/:id", ScheduleController.deleteScheduleFromDB);
+router.get(
+  "/",
+  auth(UserRole.ADMIN, UserRole.DOCTOR),
+  ScheduleController.getSchedulesForDoctor
+);
+router.post("/", auth(UserRole.ADMIN), ScheduleController.insertIntoDB);
+router.delete(
+  "/:id",
+  auth(UserRole.ADMIN),
+  ScheduleController.deleteScheduleFromDB
+);
 
 export const ScheduleRoutes = router;
