@@ -3,6 +3,10 @@ import { IOptions, paginationHelper } from "../../helpers/paginationHelper";
 import { doctorSearchableFields } from "./doctor.constant";
 import { prisma } from "../../shared/prisma";
 import { IDoctorUpdateInput } from "./doctor.interface";
+import ApiError from "../../errors/ApiError";
+import httpStatus from "http-status";
+import { openai } from "../../helpers/openRouterAI/openRouterAi";
+import { extractJsonFromMessage } from "../../helpers/openRouterAI/extractJsonFromMessage";
 
 const getAllDoctorsFromDB = async (filters: any, options: IOptions) => {
   const { page, limit, skip, sortBy, sortOrder } =
@@ -30,12 +34,12 @@ const getAllDoctorsFromDB = async (filters: any, options: IOptions) => {
           specialities: {
             title: {
               contains: specialities,
-              mode: "insensitive"
-            }
-          }
-        }
-      }
-    })
+              mode: "insensitive",
+            },
+          },
+        },
+      },
+    });
   }
 
   if (Object.keys(filterData).length > 0) {
@@ -59,10 +63,10 @@ const getAllDoctorsFromDB = async (filters: any, options: IOptions) => {
     include: {
       doctorSpecialities: {
         include: {
-          specialities: true
-        }
-      }
-    }
+          specialities: true,
+        },
+      },
+    },
   });
 
   const total = await prisma.doctor.count({
@@ -136,7 +140,65 @@ const updateDoctorInfo = async (
   });
 };
 
+// Get AI-Driven Doctor Suggestion
+const getAISuggestions = async (payload: { symptoms: string }) => {
+  if (!(payload && payload.symptoms)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Symptoms is required!");
+  }
+
+  const doctorsData = await prisma.doctor.findMany({
+    where: {
+      isDeleted: false,
+    },
+    include: {
+      doctorSpecialities: {
+        include: {
+          specialities: true,
+        },
+      },
+    },
+  });
+
+  console.log(doctorsData, "doctors Data loaded... \n");
+
+  // 1st Step
+  const prompt = `
+You are a medical assistant AI. Based on the patient's symptoms, suggest the top 3 most suitable doctors.
+Each doctor has specialties and years of experience.
+Only suggest doctors who are relevant to the given symptoms.
+
+Symptoms: ${payload.symptoms}
+
+Here is the doctor list (in JSON):
+${JSON.stringify(doctorsData, null, 2)}
+
+Return your response in JSON format with full individual doctor data. 
+`;
+
+  console.log("Analyzing");
+
+  // 2nd Step OpenAI SDK
+  const completion = await openai.chat.completions.create({
+    model: "z-ai/glm-4.5-air:free",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a helpful AI medical assistant that provides doctor suggestions.",
+      },
+      {
+        role: "user",
+        content: prompt,
+      },
+    ],
+  });
+
+  const result = await extractJsonFromMessage(completion.choices[0].message);
+  return result;
+};
+
 export const DoctorServices = {
   getAllDoctorsFromDB,
   updateDoctorInfo,
+  getAISuggestions,
 };

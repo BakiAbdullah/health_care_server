@@ -47,20 +47,24 @@ model Doctor {
 
   doctorSchedules    DoctorSchedules[]
   doctorSpecialities DoctorSpecialties[]
+  appointments       Appointment[]
+  prescriptions       Prescription[]
 
   @@map("doctors")
 }
 
 model Patient {
-  id           String   @id @default(uuid())
+  id           String         @id @default(uuid())
   name         String
-  email        String   @unique
+  email        String         @unique
   profilePhoto String?
   address      String?
-  isDeleted    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now())
-  user         User     @relation(fields: [email], references: [email])
+  isDeleted    Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @default(now())
+  user         User           @relation(fields: [email], references: [email])
+  appointments Appointment[]
+  prescriptions Prescription[]
 
   @@map("patients")
 }

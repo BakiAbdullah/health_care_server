@@ -20,4 +20,5 @@ export default {
     access_expires_in: process.env.ACCESS_EXPIRES_IN,
     refresh_expires_in: process.env.REFRESH_EXPIRES_IN,
   },
+  openRouter_api_key: process.env.OPENROUTER_API_KEY,
 };
