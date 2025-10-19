@@ -25,6 +25,17 @@ const getAllDoctorsFromDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getDoctorByIdFromDB = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await DoctorServices.getDoctorByIdFromDB(id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Doctor retrieval successfully",
+    data: result,
+  });
+});
+
 
 const updateDoctorInfo = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -49,8 +60,36 @@ const getAISuggestions = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+
+const deleteFromDB = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await DoctorServices.deleteFromDB(id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Doctor deleted successfully",
+    data: result,
+  });
+});
+
+const softDelete = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await DoctorServices.softDelete(id);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Doctor soft deleted successfully",
+    data: result,
+  });
+});
+
+
+
 export const DoctorController = {
   getAllDoctorsFromDB,
+  getDoctorByIdFromDB,
   updateDoctorInfo,
   getAISuggestions,
+  deleteFromDB,
+  softDelete,
 };
