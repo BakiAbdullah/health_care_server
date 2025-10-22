@@ -66,6 +66,12 @@ const getAllDoctorsFromDB = async (filters: any, options: IOptions) => {
           specialities: true,
         },
       },
+      reviews: {
+        select: {
+          rating: true,
+          comment: true
+        },
+      },
     },
   });
 
@@ -197,7 +203,6 @@ Return your response in JSON format with full individual doctor data.
   return result;
 };
 
-
 const getDoctorByIdFromDB = async (id: string): Promise<Doctor | null> => {
   const result = await prisma.doctor.findUnique({
     where: {
@@ -215,11 +220,11 @@ const getDoctorByIdFromDB = async (id: string): Promise<Doctor | null> => {
           schedule: true,
         },
       },
+      reviews: true
     },
   });
   return result;
 };
-
 
 const softDelete = async (id: string): Promise<Doctor> => {
   return await prisma.$transaction(async (transactionClient) => {
@@ -242,7 +247,6 @@ const softDelete = async (id: string): Promise<Doctor> => {
     return deleteDoctor;
   });
 };
-
 
 const deleteFromDB = async (id: string): Promise<Doctor> => {
   return await prisma.$transaction(async (transactionClient) => {

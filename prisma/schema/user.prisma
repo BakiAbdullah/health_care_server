@@ -40,6 +40,7 @@ model Doctor {
   qualification       String
   currentWorkingPlace String
   designation         String
+  averageRating       Float    @default(0.0)
   isDeleted           Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @default(now())
@@ -48,23 +49,27 @@ model Doctor {
   doctorSchedules    DoctorSchedules[]
   doctorSpecialities DoctorSpecialties[]
   appointments       Appointment[]
-  prescriptions       Prescription[]
+  prescriptions      Prescription[]
+  reviews             Review[]
 
   @@map("doctors")
 }
 
 model Patient {
-  id           String         @id @default(uuid())
-  name         String
-  email        String         @unique
-  profilePhoto String?
-  address      String?
-  isDeleted    Boolean        @default(false)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @default(now())
-  user         User           @relation(fields: [email], references: [email])
-  appointments Appointment[]
-  prescriptions Prescription[]
+  id                String             @id @default(uuid())
+  name              String
+  email             String             @unique
+  profilePhoto      String?
+  address           String?
+  isDeleted         Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @default(now())
+  user              User               @relation(fields: [email], references: [email])
+  appointments      Appointment[]
+  prescriptions     Prescription[]
+  PatientHealthData PatientHealthData?
+  MedicalReport     MedicalReport[]
+  Review            Review[]
 
   @@map("patients")
 }

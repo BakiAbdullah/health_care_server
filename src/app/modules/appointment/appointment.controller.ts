@@ -3,6 +3,9 @@ import catchAsync from "../../shared/catchAsync";
 import sendResponse from "../../shared/sendResponse";
 import { IJwtUserPayload } from "../../types/common";
 import { AppointmentService } from "./appointment.service";
+import pickQuery from "../../helpers/pickQuery";
+import httpStatus from "http-status";
+import { appointmentFilterableFields } from "./appointment.constant";
 
 const createAppointment = catchAsync(
   async (req: Request & { user?: IJwtUserPayload }, res: Response) => {
@@ -20,49 +23,73 @@ const createAppointment = catchAsync(
   }
 );
 
-// const getMyAppointment = catchAsync(
-//   async (req: Request & { user?: IJWTPayload }, res: Response) => {
-//     const options = pick(req.query, ["page", "limit", "sortBy", "sortOrder"]);
-//     const fillters = pick(req.query, ["status", "paymentStatus"]);
-//     const user = req.user;
-//     const result = await AppointmentService.getMyAppointment(
-//       user as IJWTPayload,
-//       fillters,
-//       options
-//     );
+const getMyAppointment = catchAsync(
+  async (req: Request & { user?: IJwtUserPayload }, res: Response) => {
+    const options = pickQuery(req.query, [
+      "page",
+      "limit",
+      "sortBy",
+      "sortOrder",
+    ]);
+    const fillters = pickQuery(req.query, ["status", "paymentStatus"]);
+    const user = req.user;
+    const result = await AppointmentService.getMyAppointment(
+      user as IJwtUserPayload,
+      fillters,
+      options
+    );
 
-//     sendResponse(res, {
-//       statusCode: 200,
-//       success: true,
-//       message: "Appointment fetched successfully!",
-//       data: result,
-//     });
-//   }
-// );
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Appointment fetched successfully!",
+      data: result,
+    });
+  }
+);
 
-// const updateAppointmentStatus = catchAsync(
-//   async (req: Request & { user?: IJWTPayload }, res: Response) => {
-//     const { id } = req.params;
-//     const { status } = req.body;
-//     const user = req.user;
+const updateAppointmentStatus = catchAsync(
+  async (req: Request & { user?: IJwtUserPayload }, res: Response) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    const user = req.user;
 
-//     const result = await AppointmentService.updateAppointmentStatus(
-//       id,
-//       status,
-//       user as IJWTPayload
-//     );
+    const result = await AppointmentService.updateAppointmentStatus(
+      id,
+      status,
+      user as IJwtUserPayload
+    );
 
-//     sendResponse(res, {
-//       statusCode: 200,
-//       success: true,
-//       message: "Appointment updated successfully!",
-//       data: result,
-//     });
-//   }
-// );
+    sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Appointment updated successfully!",
+      data: result,
+    });
+  }
+);
+
+const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
+  const filters = pickQuery(req.query, appointmentFilterableFields);
+  const options = pickQuery(req.query, [
+    "limit",
+    "page",
+    "sortBy",
+    "sortOrder",
+  ]);
+  const result = await AppointmentService.getAllFromDB(filters, options);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Appointment retrieval successfully",
+    meta: result.meta,
+    data: result.data,
+  });
+});
 
 export const AppointmentController = {
   createAppointment,
-  // getMyAppointment,
-  // updateAppointmentStatus,
+  getMyAppointment,
+  updateAppointmentStatus,
+  getAllFromDB,
 };

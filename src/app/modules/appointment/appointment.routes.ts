@@ -5,11 +5,14 @@ import { AppointmentController } from "./appointment.controller";
 
 const router = express.Router();
 
-// router.get (
-//   "/my-appointments",
-//   auth(UserRole.PATIENT, UserRole.DOCTOR),
-//   AppointmentController.getMyAppointment
-// );
+router.get("/", auth(UserRole.ADMIN), AppointmentController.getAllFromDB);
+
+
+router.get (
+  "/my-appointments",
+  auth(UserRole.PATIENT, UserRole.DOCTOR),
+  AppointmentController.getMyAppointment
+);
 
 router.post (
   "/",
@@ -17,10 +20,10 @@ router.post (
   AppointmentController.createAppointment
 );
 
-// router.patch (
-//   "/status/:id",
-//   auth(UserRole.ADMIN, UserRole.DOCTOR),
-//   AppointmentController.updateAppointmentStatus
-// );
+router.patch (
+  "/status/:id",
+  auth(UserRole.ADMIN, UserRole.DOCTOR),
+  AppointmentController.updateAppointmentStatus
+);
 
 export const AppointmentRoutes = router;

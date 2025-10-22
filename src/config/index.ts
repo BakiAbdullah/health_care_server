@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-import { access } from "fs";
 import path from "path";
 
 dotenv.config({ path: path.join(process.cwd(), ".env") });
@@ -21,4 +20,8 @@ export default {
     refresh_expires_in: process.env.REFRESH_EXPIRES_IN,
   },
   openRouter_api_key: process.env.OPENROUTER_API_KEY,
+  stripe: {
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    CLIENT_URL: process.env.CLIENT_URL,
+  },
 };
