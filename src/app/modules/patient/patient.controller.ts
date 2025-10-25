@@ -7,8 +7,6 @@ import sendResponse from "../../shared/sendResponse";
 import pickQuery from "../../helpers/pickQuery";
 import { IJwtUserPayload } from "../../types/common";
 
-
-
 const getAllFromDB = catchAsync(async (req: Request, res: Response) => {
   const filters = pickQuery(req.query, patientFilterableFields);
   const options = pickQuery(req.query, [

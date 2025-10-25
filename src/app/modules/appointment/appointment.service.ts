@@ -3,7 +3,12 @@ import { prisma } from "../../shared/prisma";
 import { IJwtUserPayload } from "../../types/common";
 import { stripe } from "../../helpers/stripe";
 import { IOptions, paginationHelper } from "../../helpers/paginationHelper";
-import { AppointmentStatus, Prisma, UserRole } from "@prisma/client";
+import {
+  AppointmentStatus,
+  PaymentStatus,
+  Prisma,
+  UserRole,
+} from "@prisma/client";
 import ApiError from "../../errors/ApiError";
 import httpStatus from "http-status";
 
@@ -191,9 +196,9 @@ const updateAppointmentStatus = async (
       id: appointmentId,
     },
     data: {
-      status: status
-    }
-  })
+      status: status,
+    },
+  });
 };
 
 // Get all Appointments from DB
@@ -261,9 +266,60 @@ const getAllFromDB = async (filters: any, options: IOptions) => {
   };
 };
 
+// Cancel Unpaid Appointmets using Node Corn
+const cancelUnpaidAppointmets = async () => {
+  const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+  // Finding unpaid appointments to remove from db
+  const unpaidAppointmets = await prisma.appointment.findMany({
+    where: {
+      createdAt: {
+        lte: thirtyMinAgo,
+      },
+      paymentStatus: PaymentStatus.UNPAID,
+    },
+  });
+
+  // Array of ids for appointment id
+  const appointmentIdsToCancel = unpaidAppointmets.map(
+    (appointment) => appointment.id
+  );
+
+  await prisma.$transaction(async (tnx) => {
+    await tnx.payment.deleteMany({
+      where: {
+        appointmentId: {
+          in: appointmentIdsToCancel,
+        },
+      },
+    });
+
+    await tnx.appointment.deleteMany({
+      where: {
+        id: { in: appointmentIdsToCancel },
+      },
+    });
+
+    for (const unpaidAppointmet of unpaidAppointmets) {
+      await tnx.doctorSchedules.update({
+        where: {
+          doctorId_scheduleId: {
+            doctorId: unpaidAppointmet.doctorId,
+            scheduleId: unpaidAppointmet.scheduleId,
+          },
+        },
+        data: {
+          isBooked: false,
+        },
+      });
+    }
+  });
+};
+
 export const AppointmentService = {
   createAppointment,
   getMyAppointment,
   updateAppointmentStatus,
   getAllFromDB,
+  cancelUnpaidAppointmets,
 };

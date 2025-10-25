@@ -104,25 +104,56 @@ const softDelete = async (id: string): Promise<Patient | null> => {
 
 const updateIntoDB = async (user: IJwtUserPayload, payload: any) => {
   const { patientHealthData, medicalReport, ...patientData } = payload;
-  
+
   const patientInfo = await prisma.patient.findUniqueOrThrow({
     where: {
       email: user.email,
-      isDeleted: false
-    }
+      isDeleted: false,
+    },
   });
 
-  await prisma.$transaction(async (tnx) => {
+  return await prisma.$transaction(async (tnx) => {
     await tnx.patient.update({
       where: {
         id: patientInfo.id,
       },
       data: patientData,
     });
+
+    if (patientHealthData) {
+      await tnx.patientHealthData.upsert({
+        where: {
+          patientId: patientInfo.id,
+        },
+        update: patientHealthData,
+        create: {
+          ...patientHealthData,
+          patientId: patientInfo.id,
+        },
+      });
+    }
+
+    if (medicalReport) {
+      await tnx.medicalReport.create({
+        data: {
+          ...medicalReport,
+          patientId: patientInfo.id,
+        },
+      });
+    }
+
+    const result = await tnx.patient.findUnique({
+      where: {
+        id: patientInfo.id,
+      },
+      include: {
+        patientHealthData: true,
+        medicalReport: true,
+      },
+    });
+
+    return result;
   });
-
-
-  7
 };
 
 export const PatientService = {

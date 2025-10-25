@@ -19,7 +19,7 @@ export const auth = (...roles: string[]) => {
 
       const verifiedUser = jwtHelper.verifyToken(
         token,
-        config.jwt_vars.access_token_secret as string
+        config.jwt_vars.access_token_secret as string,
       );
 
       req.user = verifiedUser;
